@@ -217,7 +217,8 @@ int main()
     }
     case 1: // Noise
     {
-      linePos.vec.x = (windowSize.x / 2) - noise.GetSimplexFractal(42.f + runtimeClock.getElapsedTime().asSeconds(), -42.f + runtimeClock.getElapsedTime().asSeconds()) * (windowSize.x / 4);
+      linePos.vec.x = (windowSize.x / 2) - noise.GetSimplexFractal(  42.f + runtimeClock.getElapsedTime().asSeconds()
+                                                                  , -42.f + runtimeClock.getElapsedTime().asSeconds() ) * (windowSize.x / 4);
       break;
     }
     case 2: // Manual
@@ -232,7 +233,7 @@ int main()
     line.setPosition(linePos.vec);   
 
     ImGui::DragFloat("Car Speed", &carSpeed, 0.1f, 100.f, 500.f);
-    ImGui::DragFloat2("Max Card Turn Vector", carMaxTurnVector.arr, 0.001f, -0.75f, 0.75f, "%.3f");
+    ImGui::DragFloat2("Max Car Turn Vector", carMaxTurnVector.arr, 0.001f, -0.75f, 0.75f, "%.3f");
 
     // Car update
     // Set FIS inputs   
