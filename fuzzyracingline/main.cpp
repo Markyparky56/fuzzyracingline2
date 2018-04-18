@@ -9,6 +9,7 @@
 #include "FastNoise.h"
 
 #include <memory>
+#include <cassert>
 
 const double PI = 3.14159265358979323846264338327950288419716939937510582;
 
@@ -27,43 +28,51 @@ union vec2
   {}
 };
 
-// Simple distance forumula function, ignores y-distance
-fl::scalar calcDistanceFromLine(const vec2<float> &linePos, const vec2<float> &carPos)
+template<class T>
+T clamp(T& value, T min, T max)
 {
-  vec2<float> diff(linePos.vec.x - carPos.vec.x, 0.f/*linePos.vec.y - carPos.vec.y*/);
-  return static_cast<fl::scalar>(sqrtf((diff.vec.x * diff.vec.x) + (diff.vec.y * diff.vec.y)));
+  if (value > max)
+  {
+    value = max;
+    return value;
+  }
+  else if (value < min)
+  {
+    value = min;
+    return value;
+  }
+  else return value;
 }
 
 int main()
 {
   // Setup FIS
   fl::FisImporter importer;
-  fl::InputVariable *distanceInput, *velocityInput;
   pEngine engine1 = pEngine(importer.fromFile("frl_mamdani1.fis"));
   pEngine engine2 = pEngine(importer.fromFile("frl_mamdani2.fis"));
   pEngine engine3 = pEngine(importer.fromFile("frl_sugeno1.fis"));
   pEngine engine4 = pEngine(importer.fromFile("frl_sugeno2.fis"));
   pEngine engine5 = pEngine(importer.fromFile("old_fuzzyracingline.fis"));
   fl::Engine *engine = engine1.get();
-  std::string status;
-  bool engineOK = engine->isReady(&status);  
-  if (engineOK)
-  {
-    distanceInput = engine->getInputVariable("distance");
-    velocityInput = engine->getInputVariable("velocity");
-  }
+  std::vector<std::string> status(5);
+  std::vector<bool> engineready(5);
+  engineready[0] = engine1->isReady(&status[0]);
+  engineready[1] = engine2->isReady(&status[1]);
+  engineready[2] = engine3->isReady(&status[2]);
+  engineready[3] = engine4->isReady(&status[3]);
+  engineready[4] = engine5->isReady(&status[4]);
+  bool enginesOK = engineready[0] && engineready[1] && engineready[2] && engineready[3] && engineready[4];
 
   sf::Vector2<unsigned int> windowSize(800, 600);
 
   sf::RenderWindow window(sf::VideoMode(windowSize.x, windowSize.y), "Fuzzy Logic - Racing Line", sf::Style::Titlebar | sf::Style::Close);
   window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(window);
-  
+
   sf::Clock runtimeClock;
   sf::Clock deltaClock;
   sf::Color bgColour(100, 100, 100);
 
-  //bool setLinePosToSinCurve = false;
   int selectedFIS = 0;
   bool manualModalOpen = false;
 
@@ -71,11 +80,11 @@ int main()
   int selectedLineController = 0;
   FastNoise noise(42);
   noise.SetInterp(FastNoise::Interp::Quintic);
-  noise.SetFrequency(0.2);
-  noise.SetFractalGain(0.4);
-  noise.SetFractalLacunarity(1.5);
+  noise.SetFrequency(static_cast<float>(0.2));
+  noise.SetFractalGain(static_cast<float>(0.4));
+  noise.SetFractalLacunarity(static_cast<float>(1.5));
   noise.SetFractalOctaves(3);
-  
+
   sf::RectangleShape line;
   vec2<float> linePos(400, 300);
   sf::Vector2f lineSize(10.f, 100.f);
@@ -95,6 +104,8 @@ int main()
   car.setPosition(carPos.vec);
   car.setFillColor(sf::Color::Red);
   fl::scalar lastdistance = linePos.vec.x - carPos.vec.x; // Cache the previous distance from the line to use to calculate the velocity relative to the line
+  float distModifier = 0.25f;
+  float velModifier = 0.04f;
 
   runtimeClock.restart();
   while (window.isOpen())
@@ -104,11 +115,11 @@ int main()
     while (window.pollEvent(event))
     {
       ImGui::SFML::ProcessEvent(event);
-      
+
       switch (event.type)
       {
       case sf::Event::Closed: window.close(); break;
-       
+
       default:
         break;
       }
@@ -132,8 +143,8 @@ int main()
 
     if (manualModalOpen)
     {
-      ImGui::OpenPopup("ManualFIS");
-      if (ImGui::BeginPopupModal("ManualFIS"))
+      ImGui::OpenPopup("Manual FIS");
+      if (ImGui::BeginPopupModal("Manual FIS"))
       {
         static float distance = 0;
         static float velocity = 0;
@@ -158,13 +169,25 @@ int main()
       }
     }
 
-    ImGui::Text("Delta: %.3f FPS: %.2f", delta, 1/delta);
+    ImGui::Text("Delta: %.3f FPS: %.2f", delta, 1 / delta);
 
     // In case something goes wrong with the engine during import
-    if (!engineOK)
+    if (!enginesOK)
     {
-      if(status.length()) ImGui::Text(status.c_str());
-      else(ImGui::Text("Status String Empty"));
+      if (status[0].length()) ImGui::Text(status[0].c_str());
+      else(ImGui::Text("Status[0] String Empty"));
+
+      if (status[1].length()) ImGui::Text(status[1].c_str());
+      else(ImGui::Text("Status[1] String Empty"));
+
+      if (status[2].length()) ImGui::Text(status[2].c_str());
+      else(ImGui::Text("Status[2] String Empty"));
+
+      if (status[3].length()) ImGui::Text(status[3].c_str());
+      else(ImGui::Text("Status[3] String Empty"));
+
+      if (status[4].length()) ImGui::Text(status[4].c_str());
+      else(ImGui::Text("Status[4] String Empty"));
     }
 
     // FIS Selector
@@ -218,68 +241,69 @@ int main()
     case 1: // Noise
     {
       linePos.vec.x = (windowSize.x / 2) - noise.GetSimplexFractal(  42.f + runtimeClock.getElapsedTime().asSeconds()
-                                                                  , -42.f + runtimeClock.getElapsedTime().asSeconds() ) * (windowSize.x / 4);
+                                                                  , -42.f + runtimeClock.getElapsedTime().asSeconds()) * (windowSize.x / 4.f);
       break;
     }
     case 2: // Manual
     {
-      ImGui::DragFloat("Line Position", &(linePos.arr[0]), 1.f, windowSize.x / 2 - windowSize.x / 4, windowSize.x/2 + windowSize.x / 4);
+      ImGui::DragFloat("Line Position", &(linePos.vec.x), 1.f, ((windowSize.x / 2.f) - (windowSize.x / 4.f)), ((windowSize.x / 2.f) + (windowSize.x / 4.f)));
       break;
     }
     default:
       break;
     }
-    
-    line.setPosition(linePos.vec);   
+
+    line.setPosition(linePos.vec);
 
     ImGui::DragFloat("Car Speed", &carSpeed, 0.1f, 100.f, 500.f);
     ImGui::DragFloat2("Max Car Turn Vector", carMaxTurnVector.arr, 0.001f, -0.75f, 0.75f, "%.3f");
 
+    ImGui::DragFloat("Car Distance Normalisation Modifier", &distModifier, 0.001f, 0.001f, 1.f);
+    ImGui::DragFloat("Car Velocity Normalisation Modifier", &velModifier, 0.001f, 0.001f, 1.f);
+
     // Car update
     // Set FIS inputs   
     fl::scalar distance = (linePos.vec.x - carPos.vec.x);
-    fl::scalar distanceNormalised = distance / (windowSize.x/4);
-    if (distanceNormalised > 1.0) distanceNormalised = 1.0;
-    if (distanceNormalised < -1.0) distanceNormalised = -1.0;
+    fl::scalar distanceNormalised = distance / (windowSize.x * distModifier); // Take the difference between the line and the car and divide it by a portion of the screen size
+    clamp(distanceNormalised, -1.0, 1.0);
 
     fl::scalar diffDistance = (lastdistance - distance);
-    fl::scalar velocityNormalised = (diffDistance / (windowSize.x/12)); // take the difference between the last distance and the new distance and divide it by the maximum distance on the screen
-    if (velocityNormalised > 1.0) velocityNormalised = 1.0;
-    if (velocityNormalised < -1.0) velocityNormalised = -1.0;
+    fl::scalar velocityNormalised = (diffDistance / (windowSize.x * velModifier)); // Take the difference between the last distance and the new distance and divide it by a portion of the screen size
+    clamp(velocityNormalised, -1.0, 1.0);
 
     engine->setInputValue("distance", distanceNormalised);
     engine->setInputValue("velocity", velocityNormalised);
+
     // Get FIS turn value
     engine->process();
     fl::scalar direction = engine->getOutputValue("direction");
-    if (direction != direction) abort(); // NaN check
+    assert(direction == direction); // Assert to check if direction is a number
 
     // Convert direction into an angle to rotate the car by
-    vec2<float> directionVector(direction * carMaxTurnVector.vec.x, carMaxTurnVector.vec.y);      
-     
+    vec2<float> directionVector(static_cast<float>(direction) * carMaxTurnVector.vec.x, carMaxTurnVector.vec.y);
+
     // Apply new turn vector to current turn vector, cap if we reach max turn
     dirVector.vec.x = directionVector.vec.x;
     dirVector.vec.y = directionVector.vec.y;
-    if (dirVector.vec.x > carMaxTurnVector.vec.x) dirVector.vec.x = carMaxTurnVector.vec.x;
-    if (dirVector.vec.x < -carMaxTurnVector.vec.x) dirVector.vec.x = -carMaxTurnVector.vec.x;
-    if (dirVector.vec.y > carMaxTurnVector.vec.y) dirVector.vec.y = carMaxTurnVector.vec.y;
-    if (dirVector.vec.y < -carMaxTurnVector.vec.y) dirVector.vec.y = -carMaxTurnVector.vec.y;
+    clamp(directionVector.vec.x, -carMaxTurnVector.vec.x, carMaxTurnVector.vec.x);
+    clamp(directionVector.vec.y, -carMaxTurnVector.vec.y, carMaxTurnVector.vec.y);
 
-    // Calculate the angle between the new vector and the vector (0, 1 (up)
-    float dot = (0 * dirVector.vec.x) + (1 * dirVector.vec.y); // 0 * x + 1 * y = y
+    // Calculate the angle between the new vector and the vector (0, 1) (up)
+    // (0 * dirVector.vec.x) & (0 * dirVector.vec.y) left in so maths is obvious
+    float dot = (0 * dirVector.vec.x) + (1 * dirVector.vec.y);
     float det = (0 * dirVector.vec.y) - (1 * dirVector.vec.x);
     float angleRads = std::atan2(det, dot);
-    float angleDeg = (angleRads / PI) * 180;
+    float angleDeg = (angleRads / static_cast<float>(PI)) * 180;
 
     // Calculate the car's new position
-    vec2<float> newPos( carPos.vec.x - (dirVector.vec.x * (carSpeed * delta))
-                      , carPos.vec.y); // Y is fixed for this program, but would follow the same principle and x
+    vec2<float> newPos(carPos.vec.x - (dirVector.vec.x * (carSpeed * delta))
+      , carPos.vec.y); // Y is fixed for this program, but would follow the same principle and x
 
 
-    // Update the car's position
+                // Update the car's position
     carPos.vec.x = newPos.vec.x;
     car.setPosition(carPos.vec);
-    
+
     // Set the car's rotation
     car.setRotation(angleDeg);
 
@@ -292,25 +316,24 @@ int main()
     ImGui::Text("Direction calculated by FIS: %.5f", direction);
     ImGui::Text("Calculated Direction Vector: (%.5f, %.5f)", directionVector.vec.x, directionVector.vec.y);
     ImGui::Text("DotProduct: %.5f Determinant: %.5f", dot, det);
-    ImGui::Text("%.5f/%.5f: %.5f", dot, det, dot/det);
+    ImGui::Text("%.5f/%.5f: %.5f", dot, det, dot / det);
     ImGui::Text("Angle to rotate car by: (Radians) %.5f, (Degrees) %.5f", angleRads, angleDeg);
     ImGui::Spacing();
     ImGui::Text("Car Position: (%.5f, %.5f)", carPos.vec.x, carPos.vec.y);
     ImGui::Text("Car Direction Vector: (%.5f, %.5f)", dirVector.vec.x, dirVector.vec.y);
 
     ImGui::End(); // end window
-    //ImGui::ShowDemoWindow();
 
-    // Screen update
+            // Screen update
     window.clear(bgColour); // fill background with color
-    
+
     window.draw(line);
     window.draw(car);
     ImGui::SFML::Render(window);
     window.display();
   }
 
-  ImGui::SFML::Shutdown();
+  ImGui::SFML::Shutdown();  
 
   return 0;
 }

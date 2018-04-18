@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\..\..\..\..\..\local\imgui-sfml\imgui-SFML.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\..\local\FastNoise\FastNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

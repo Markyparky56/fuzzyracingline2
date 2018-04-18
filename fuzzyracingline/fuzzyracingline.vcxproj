@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -42,7 +42,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -84,10 +84,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\local\SFML-2.4.2\include;C:\local\imgui;C:\local\imgui-sfml;C:\local\fuzzylite-6.0\fuzzylite;C:\local\FastNoise;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\local\SFML-2.4.2\include;C:\local\imgui;C:\local\imgui-sfml;C:\local\fuzzylite-6.0\fuzzylite;C:\local\FastNoise;..\..\..\..\local\SFML-2.4.2\include;..\..\..\..\local\imgui;..\..\..\..\local\imgui-sfml;..\..\..\..\local\FastNoise;..\..\..\..\local\fuzzylite-6.0\fuzzylite;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\local\SFML-2.4.2\build\lib\Release;C:\local\fuzzylite-6.0\fuzzylite\build\bin\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\local\SFML-2.4.2\build\lib\Release;C:\local\fuzzylite-6.0\fuzzylite\build\bin\Debug;..\..\..\..\local\SFML-2.4.2\lib\;..\..\..\..\local\fuzzylite-6.0\fuzzylite\debug\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;opengl32.lib;fuzzylite-debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>NotSet</SubSystem>
     </Link>
@@ -114,22 +114,33 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\local\SFML-2.4.2\include;C:\local\imgui;C:\local\imgui-sfml;C:\local\fuzzylite-6.0\fuzzylite;C:\local\FastNoise;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\local\SFML-2.4.2\include;C:\local\imgui;C:\local\imgui-sfml;C:\local\fuzzylite-6.0\fuzzylite;C:\local\FastNoise;..\..\..\..\local\SFML-2.4.2\include;..\..\..\..\local\imgui;..\..\..\..\local\imgui-sfml;..\..\..\..\local\FastNoise;..\..\..\..\local\fuzzylite-6.0\fuzzylite;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\local\SFML-2.4.2\build\lib\Release;C:\local\fuzzylite-6.0\fuzzylite\build\bin\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\local\SFML-2.4.2\build\lib\Release;C:\local\fuzzylite-6.0\fuzzylite\build\bin\Release;..\..\..\..\local\SFML-2.4.2\lib;..\..\..\..\local\fuzzylite-6.0\fuzzylite\release\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;opengl32.lib;fuzzylite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>NotSet</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\..\local\FastNoise\FastNoise.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\..\local\imgui-sfml\imgui-SFML.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\..\local\FastNoise\FastNoise.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\local\imgui-sfml\imgui-SFML.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\local\imgui\imgui_draw.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
