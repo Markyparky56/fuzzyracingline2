@@ -62,18 +62,20 @@ int main()
   engineready[3] = engine4->isReady(&status[3]);
   engineready[4] = engine5->isReady(&status[4]);
   bool enginesOK = engineready[0] && engineready[1] && engineready[2] && engineready[3] && engineready[4];
+  int selectedFIS = 0;
 
+  // Setup Window & UI
   sf::Vector2<unsigned int> windowSize(800, 600);
-
+  sf::Color bgColour(100, 100, 100);
   sf::RenderWindow window(sf::VideoMode(windowSize.x, windowSize.y), "Fuzzy Logic - Racing Line", sf::Style::Titlebar | sf::Style::Close);
   window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(window);
 
+  // Clocks for tracking runtime and frametimes
   sf::Clock runtimeClock;
   sf::Clock deltaClock;
-  sf::Color bgColour(100, 100, 100);
 
-  int selectedFIS = 0;
+  // Track whether the manual input window is open
   bool manualModalOpen = false;
 
   // Setup FastNoise class
@@ -85,6 +87,7 @@ int main()
   noise.SetFractalLacunarity(static_cast<float>(1.5));
   noise.SetFractalOctaves(3);
 
+  // Racing line object
   sf::RectangleShape line;
   vec2<float> linePos(400, 300);
   sf::Vector2f lineSize(10.f, 100.f);
@@ -93,6 +96,7 @@ int main()
   line.setPosition(linePos.vec);
   line.setFillColor(sf::Color::White);
 
+  // Car object
   sf::RectangleShape car;
   vec2<float> carPos(200, 300);
   vec2<float> carMaxTurnVector(0.75f, 0.2f); // We'll multiply this with the value returned by the FIS, then calculate the angle
@@ -213,7 +217,7 @@ int main()
         ImGui::TextWrapped("Mamdani 1 (file: frl_mamdani1.fis) is a basic mamdani fuzzy inference system. Membership functions are either defined as trapeziums or triangles. The mfs do not extend beyond the range of [-1, 1]. Uses Centroid defuzzification.");
         break;
       case 1:
-        ImGui::TextWrapped("Mamdani 2 (file: frl_mamdani2.fis) is a slightly more complicated fuzzy inference system. It uses a mixture of 'pimf' or pi-shaped membership functions, along with triangle mfs. These membership functions allow for a smooth transition output values.");
+        ImGui::TextWrapped("Mamdani 2 (file: frl_mamdani2.fis) is a slightly more refined fuzzy inference system. It uses a mixture of 'pimf' or pi-shaped membership functions, along with triangle mfs. These membership functions allow for a smooth transition between output values.");
         break;
       case 2:
         ImGui::TextWrapped("Sugeno 1 (file: frl_sugeno1.fis) is a sugeno fuzzy inference system, using what MATLAB calls 'constant' values for its outputs. It also uses 'pimf' or pi-shaped membership functions along with triangle mfs for its input variables.");
@@ -230,6 +234,7 @@ int main()
       ImGui::TreePop();
     }
 
+    // Racing line update
     ImGui::Combo("Line Position Controller", &selectedLineController, "Sine Curve\0Procedural Noise\0Manual\0");
     switch (selectedLineController)
     {
@@ -241,7 +246,7 @@ int main()
     case 1: // Noise
     {
       linePos.vec.x = (windowSize.x / 2) - noise.GetSimplexFractal(  42.f + runtimeClock.getElapsedTime().asSeconds()
-                                                                  , -42.f + runtimeClock.getElapsedTime().asSeconds()) * (windowSize.x / 4.f);
+                                                                  , -42.f + runtimeClock.getElapsedTime().asSeconds() ) * (windowSize.x / 4.f);
       break;
     }
     case 2: // Manual
@@ -274,7 +279,7 @@ int main()
     engine->setInputValue("distance", distanceNormalised);
     engine->setInputValue("velocity", velocityNormalised);
 
-    // Get FIS turn value
+    // Get FIS direction value
     engine->process();
     fl::scalar direction = engine->getOutputValue("direction");
     assert(direction == direction); // Assert to check if direction is a number
@@ -296,11 +301,10 @@ int main()
     float angleDeg = (angleRads / static_cast<float>(PI)) * 180;
 
     // Calculate the car's new position
-    vec2<float> newPos(carPos.vec.x - (dirVector.vec.x * (carSpeed * delta))
-      , carPos.vec.y); // Y is fixed for this program, but would follow the same principle and x
+    vec2<float> newPos( carPos.vec.x - (dirVector.vec.x * (carSpeed * delta))
+                      , carPos.vec.y); // Y is fixed for this program, but would follow the same principle and x
 
-
-                // Update the car's position
+    // Update the car's position
     carPos.vec.x = newPos.vec.x;
     car.setPosition(carPos.vec);
 
@@ -324,7 +328,7 @@ int main()
 
     ImGui::End(); // end window
 
-            // Screen update
+    // Screen update
     window.clear(bgColour); // fill background with color
 
     window.draw(line);
